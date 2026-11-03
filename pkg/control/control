@@ -1,0 +1,9 @@
+Package: voxl-mqtt-server
+Version: 0.1.0
+Section: net
+Priority: optional
+Architecture: all
+Depends: mosquitto (>= 1.4), bash
+Maintainer: Akira Hirakawa <akira@reddotdrone.com>
+Description: Local Mosquitto MQTT broker setup for VOXL
+ Provides editable broker configuration and a dedicated systemd service.

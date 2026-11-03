@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl daemon-reload || true
+fi
+# Preserve broker data and user-created password/certificate files.
+exit 0

@@ -1,0 +1,42 @@
+#!/bin/bash
+set -euo pipefail
+config=/etc/modalai/voxl-mqtt-server.conf
+default=/usr/share/voxl-mqtt-server/voxl-mqtt-server.conf
+usage() {
+    echo 'Usage: voxl-configure-mqtt-server --config | --edit | --save-default [--force]'
+    echo 'Resetting an existing configuration requires --save-default --force.'
+    echo 'Restart voxl-mqtt-server after changing the configuration.'
+}
+[[ $# -gt 0 ]] || { usage; exit 2; }
+case "$1" in
+    -h|--help) [[ $# == 1 ]] || exit 2; usage ;;
+    -c|--config) [[ $# == 1 ]] || exit 2; cat "$config" ;;
+    -e|--edit)
+        [[ $# == 1 ]] || exit 2
+        if [[ -n "${EDITOR:-}" ]]; then
+            "$EDITOR" "$config"
+        elif command -v nano >/dev/null; then nano "$config"
+        else vi "$config"
+        fi
+        ;;
+    -s|--save-default)
+        force=false
+        if [[ $# == 2 && "$2" == --force ]]; then force=true
+        elif [[ $# != 1 ]]; then usage >&2; exit 2; fi
+        [[ $EUID == 0 ]] || { echo 'Run as root to restore defaults.' >&2; exit 1; }
+        mkdir -p /etc/modalai
+        if [[ -e "$config" || -L "$config" ]]; then
+            $force || { echo 'Configuration exists; use --force to back it up and reset it.' >&2; exit 1; }
+            backup=$(mktemp "${config}.backup.XXXXXX")
+            cp -p "$config" "$backup"
+            echo "Backup saved to $backup"
+            install -m 0644 "$default" "$config"
+        else
+            # Refuse to overwrite a configuration created concurrently.
+            (set -o noclobber; cat "$default" > "$config")
+            chmod 0644 "$config"
+        fi
+        echo "Defaults saved to $config"
+        ;;
+    *) usage >&2; exit 2 ;;
+esac

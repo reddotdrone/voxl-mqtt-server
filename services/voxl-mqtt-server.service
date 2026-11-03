@@ -1,0 +1,20 @@
+[Unit]
+Description=VOXL local MQTT broker
+After=network.target
+Conflicts=mosquitto.service
+StartLimitIntervalSec=30
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=mosquitto
+Group=mosquitto
+ExecStart=/usr/sbin/mosquitto -c /etc/modalai/voxl-mqtt-server.conf
+Restart=on-failure
+RestartSec=3
+StateDirectory=voxl-mqtt-server
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
